@@ -1,0 +1,1179 @@
+﻿@page "/CslaVendorsedit"
+@page "/CslaVendorsedit/{id}"
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.AP_Vendors> vm
+@*@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CO_Subs> COsubs*@
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CO_SubsBase> COsubBase
+@*@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CB_CBSources> CBS*@
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.AP_APTermsCollection> Terms
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CB_TaxesPA> Taxable
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CB_TaxesCollection> DefTaxes
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.AP_VendorsCollection> VendorTaxId
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.vspCO_SubOverridesCollection> OverRdRt
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CB_DiscountsCollection> Discounts
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CO_StatesCollection> States
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.AP_VendorsExt> VendorsExt
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CO_CountriesCollection> Countries
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CB_CBSourcesCollection> Sources
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CB_ClassificationsCollection> Classifications
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CO_ShippingMethodsCollection> Shipping
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.CO_ContactsCollection> Contacts
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.AP_VendorsCollection> OtherAmt1
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.DA_DAHeadersCollection> DAs
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.GL_Seg1Collection> Accts
+@inject Csla.Blazor.ViewModel<FezWeb.BizObj.AP_1099s> Ten_99s
+
+
+@using Csla.Blazor
+@using  Csla.Rules
+@using System.Reflection
+
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime;
+
+
+<head>
+    <link href="scss/styles.css" rel="stylesheet" media="all" />
+</head>
+@*<div class="container">*@
+<p class="text-danger">@vm.ViewModelErrorText</p>
+@if (vm != null && vm.Exception != null)
+{
+    <p class="text-danger">((Csla.DataPortalException)@vm.Exception).BusinessExceptionMessage</p>
+}
+@*<div class="row">*@
+@if (vm.Model == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <DxToolbar ItemRenderStyleMode="ToolbarRenderStyleMode.Plain"
+               ItemSizeMode="SizeMode.Small"
+               CssClass="wholeForm">
+        <DxToolbarItem Text="Save and Close"
+                       IconCssClass="buttonSaveAndClose"
+                       CssClass="buttonMainLayout"
+                       @onclick="vm.SaveAsync" />
+        <DxToolbarItem Text="Cancel"
+                       IconCssClass="buttonCancel"
+                       CssClass="buttonMainLayout" />
+        <DxToolbarItem IconCssClass="buttonPrevious"
+                       CssClass="buttonMainLayout" />
+        <DxToolbarItem IconCssClass="buttonNext"
+                       CssClass="buttonMainLayout" />
+        <DxToolbarItem Text="Print"
+                       IconCssClass="buttonPrint"
+                       CssClass="buttonMainLayout" />
+        <DxToolbarItem Text="Delete"
+                       IconCssClass="buttonDelete"
+                       CssClass="buttonMainLayout" />
+        <DxToolbarItem Text="Help"
+                       IconCssClass="buttonHelp"
+                       CssClass="buttonMainLayout" />
+    </DxToolbar>
+    <hr class="horizontalRuleForm" />
+    <DxTabs @bind-ActiveTabIndex="@ActiveTabIndex0">
+
+        <DxTabPage Text="General" CssClass="editFormTabs">
+            @switch (ActiveTabIndex0)
+            {
+                case 0:
+                    <EditForm Model="@vm.Model">
+                        <CslaValidator />
+                        <div class="shortDxFormLayoutGroup">
+                            <DxFormLayout Data="@vm.Model.AP_VendorsExtList[0]"
+                                          ItemUpdating="@((pair) => OnItemUpdatingDet(pair.Key, pair.Value))"
+                                          CssClass="lgForm">
+                                @*Vendor*@
+
+                                <DxFormLayoutGroup Decoration="FormLayoutGroupDecoration.None"
+                                                   ColSpanXs="12"
+                                                   ColSpanMd="12"
+                                                   ColSpanLg="6">
+                                    @if (vm.Model.SubClass == "I")
+                                    {
+                                        <DxFormLayoutGroup Caption="Vendor"
+                                                           CaptionCssClass="lgFormMain fieldHeight"
+                                                           ColSpanXs="12"
+                                                           ColSpanMd="12"
+                                                           ColSpanLg="12">
+                                            @*"FKAPtermID"" is incorrect. Will need to replace it.*@
+                                            <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKAPtermID)"
+                                                              Caption="Type:*"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="TypeField">
+                                                    <DxComboBox Data="@SubTypes.VendorSubTypes"
+                                                                @bind-Value="@vm.Model.SubClass"
+                                                                ValueFieldName="@nameof(SubTypeField.SubTypeLetter)"
+                                                                TextFieldName="@nameof(SubTypeField.SubTypeName)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        @*@bind-Text="@vm.Model.SubType"*@
+                                                        <DxListEditorColumn FieldName="SubTypeName" Caption="Type" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            @*S/B FROMCOSUBS*@
+                                            <DxFormLayoutItem Field="@nameof(CO_Subs.Fname)"
+                                                              Caption="Fname:"
+                                                              ColSpanXs="6"
+                                                              ColSpanMd="3"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="FnameField">
+                                                    <DxTextBox @bind-Text="@vm.Model.Fname" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.Fname)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(CO_Subs.MI)"
+                                                              Caption="Middle:"
+                                                              ColSpanXs="6"
+                                                              ColSpanMd="3"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="MIField">
+                                                    <DxTextBox @bind-Text="@vm.Model.MI" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.MI)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(CO_Subs.Lname)"
+                                                              Caption="Lname:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="6"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="LnameField">
+                                                    <DxTextBox @bind-Text="@vm.Model.Lname" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.Lname)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.Prefix)"
+                                                              Caption="Prefix:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="6"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="PrefixField">
+                                                    <DxTextBox @bind-Text="@vm.Model.Prefix" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.Prefix)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.Suffix)"
+                                                              Caption="Suffix:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="6"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="SuffixField">
+                                                    <DxTextBox @bind-Text="@vm.Model.Suffix" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.Suffix)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                        </DxFormLayoutGroup>
+                                    }
+                                    else
+                                    {
+                                        <DxFormLayoutGroup Caption="Vendor"
+                                                           CaptionCssClass="lgFormMain"
+                                                           ColSpanXs="12"
+                                                           ColSpanMd="12"
+                                                           ColSpanLg="12">
+                                            @*"FKAPtermID"" is incorrect. Will need to replace it.*@
+                                            <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKAPtermID)"
+                                                              Caption="Type:*"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="TypeField">
+                                                    <DxComboBox Data="@SubTypes.VendorSubTypes"
+                                                                @bind-Value="@vm.Model.SubClass"
+                                                                ValueFieldName="@nameof(SubTypeField.SubTypeLetter)"
+                                                                TextFieldName="@nameof(SubTypeField.SubTypeName)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        @*@bind-Text="@vm.Model.SubType"*@
+                                                        <DxListEditorColumn FieldName="SubTypeName" Caption="Type" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(VendorsExt.Model.TableName)"
+                                                              Caption="Name:*"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="NameField">
+                                                    <DxTextBox @bind-Text="@vm.Model.CompanyName" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.CompanyName)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                        </DxFormLayoutGroup>
+                                    }
+                                </DxFormLayoutGroup>
+
+                                @*Payment*@
+                                <div class="shortDxFormLayoutGroup">
+                                    <DxFormLayoutGroup Decoration="FormLayoutGroupDecoration.None"
+                                                       ColSpanXs="12"
+                                                       ColSpanMd="12"
+                                                       ColSpanLg="6">
+                                        <DxFormLayoutGroup Caption="Payment"
+                                                           ColSpanXs="12"
+                                                           ColSpanMd="12"
+                                                           ColSpanLg="12">
+                                            <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKAPtermID)"
+                                                              Caption="Payment Term:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="PymtTermField">
+                                                    <DxComboBox Data="@Terms.Model"
+                                                                @bind-Value="@vm.Model.AP_VendorsExtList[0].FKAPtermID"
+                                                                ValueFieldName="@nameof(AP_APTermsRO.ID)"
+                                                                TextFieldName="@nameof(AP_APTermsRO.Value)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        <DxListEditorColumn FieldName="Value" Caption="Term:" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.Suffix)"
+                                                              Caption="Vendor Account:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="VendorAcctField">
+                                                    <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].AccountNo" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.Suffix)"
+                                                              Caption="Check Memo:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="CheckMemoField">
+                                                    <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].CheckStubMemo" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.Suffix)"
+                                                              Caption="Tax ID:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="TaxIdField">
+                                                    <DxTextBox @bind-Text="@vm.Model.TaxNo" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Caption="1099 Vendor:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="3"
+                                                              CaptionCssClass="lgFormCaption">
+                                                <Template Context="Is1099">
+                                                    @if (@vm.Model.AP_VendorsExtList[0].Is1099)
+                                                    {
+                                                        <DxCheckBox @bind-Checked="is1099" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <DxCheckBox @bind-Checked="isNot1099" />
+                                                    }
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            @*ASK MB*@
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.Suffix)"
+                                                              Caption="ASK MB:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="9"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="TaxIdField">
+                                                    <DxTextBox @bind-Text="@vm.Model.TaxNo" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            @*<DxFormLayoutItem Field="@nameof(AP_VendorsExt.Ten99DefaultBox)"
+                          Caption="Default 1099 Box:"
+                          ColSpanXs="12"
+                          ColSpanMd="9"
+                          CaptionCssClass="lgFormCaption"
+                          CssClass="">
+            <Template Context="Def1099">
+                <DxComboBox Data="@Def1099s.Model"
+                            @bind-Value="@vm.Model.AP_VendorsExtList[0].Ten99DefaultBox"
+                            ValueFieldName="@nameof(AP_AP1099AdjustRO.ID)"
+                            TextFieldName="@nameof(AP_AP1099AdjustRO.Box)"
+                            DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                            CssClass="cmbStatus cmbStatusWidth"
+                            Id="cmbSubType">
+                    <DxListEditorColumn FieldName="Value" Caption="Term:" />
+                </DxComboBox>
+                <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+            </Template>
+        </DxFormLayoutItem>*@
+                                            <DxFormLayoutItem Field="@nameof(vm.Model.ID)"
+                                                              Caption="1099 Alt. Name:"
+                                                              ColSpanXs="12"
+                                                              ColSpanMd="12"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="TNNAltNameField">
+                                                    <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Ten99AlternateName" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <div class="checkBox">
+                                                <DxFormLayoutItem Caption="Credit Card Vendor:"
+                                                                  ColSpanXs="12"
+                                                                  ColSpanMd="12"
+                                                                  CaptionCssClass="lgFormCaption">
+                                                    <Template Context="CCVendor">
+                                                        @if (@vm.Model.AP_VendorsExtList[0].IsCreditCard)
+                                                        {
+                                                            <DxCheckBox LabelPosition="LabelPosition.Right"
+                                                                        @bind-Checked="isCCVendor"
+                                                                        CssClass="checkbox">
+                                                                <div class="lgFormCaption">
+                                                                    <p>
+                                                                        (this vendor is a credit card company e.g.: Amex, Visa, etc.)
+                                                                    </p>
+                                                                </div>
+                                                            </DxCheckBox>
+                                                        }
+                                                        else
+                                                        {
+                                                            <DxCheckBox LabelPosition="LabelPosition.Right"
+                                                                        @bind-Checked="isNotCCVendor"
+                                                                        CssClass="checkbox">
+                                                                <div class="lgFormCaption">
+                                                                    <p>
+                                                                        (this vendor is a credit card company e.g.: Amex, Visa, etc.)
+                                                                    </p>
+                                                                </div>
+                                                            </DxCheckBox>
+                                                        }
+                                                    </Template>
+                                                </DxFormLayoutItem>
+                                                <DxFormLayoutItem Caption="Separate Checks:"
+                                                                  ColSpanXs="12"
+                                                                  ColSpanMd="12"
+                                                                  CaptionCssClass="lgFormCaption">
+                                                    <Template Context="SeparateChecks">
+                                                        @if (@vm.Model.AP_VendorsExtList[0].SeparateChecks)
+                                                        {
+                                                            <DxCheckBox LabelPosition="LabelPosition.Right"
+                                                                        @bind-Checked="isSeparateChecks"
+                                                                        CssClass="checkbox">
+                                                                <div class="lgFormCaption">
+                                                                    <p>
+                                                                        (always print a separate check for each invoice)
+                                                                    </p>
+                                                                </div>
+                                                            </DxCheckBox>
+                                                        }
+                                                        else
+                                                        {
+                                                            <DxCheckBox LabelPosition="LabelPosition.Right"
+                                                                        @bind-Checked="isNotSeparateChecks"
+                                                                        CssClass="checkbox">
+                                                                <div class="lgFormCaption">
+                                                                    <p>
+                                                                        (always print a separate check for each invoice)
+                                                                    </p>
+                                                                </div>
+                                                            </DxCheckBox>
+                                                        }
+                                                    </Template>
+                                                </DxFormLayoutItem>
+                                                <DxFormLayoutItem Caption="Hold Payment:"
+                                                                  ColSpanXs="12"
+                                                                  ColSpanMd="12"
+                                                                  CaptionCssClass="lgFormCaption">
+                                                    <Template Context="HoldPayment">
+                                                        @if (@vm.Model.AP_VendorsExtList[0].HoldPayments)
+                                                        {
+                                                            <DxCheckBox LabelPosition="LabelPosition.Right"
+                                                                        @bind-Checked="doHoldPayment"
+                                                                        CssClass="checkbox">
+                                                                <div class="lgFormCaption">
+                                                                    <p>
+                                                                        (suspend payment to this vendor)
+                                                                    </p>
+                                                                </div>
+                                                            </DxCheckBox>
+                                                        }
+                                                        else
+                                                        {
+                                                            <DxCheckBox LabelPosition="LabelPosition.Right"
+                                                                        @bind-Checked="doNotHoldPayment"
+                                                                        CssClass="checkbox">
+                                                                <div class="lgFormCaption">
+                                                                    <p>
+                                                                        (suspend payment to this vendor)
+                                                                    </p>
+                                                                </div>
+                                                            </DxCheckBox>
+                                                        }
+                                                    </Template>
+                                                </DxFormLayoutItem>
+                                            </div>
+                                        </DxFormLayoutGroup>
+
+                                    </DxFormLayoutGroup>
+                                </div>
+                                @*Address Tabs*@
+                            <div id="vendorAddressGroup">
+                                <DxFormLayoutTabPages ColSpanXs="12"
+                                                      ColSpanLg="6"
+                                                      ActiveTabIndex="@ActiveTabIndex1">
+
+
+                                    <DxFormLayoutTabPage Caption="Main">
+                                        @switch (ActiveTabIndex1)
+                                        {
+                                            case 0:
+                                                @*Address Group*@
+
+                                                <DxFormLayoutGroup Caption="Address"
+                                                                   ColSpanXs="12"
+                                                                   ColSpanMd="12"
+                                                                   ColSpanLg="12">
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Addr1)"
+                                                                      Caption="Line 1:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="12"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="Line1Field">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Addr1" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    @*KEEP BELOW, FIX WHEN YOU FIGURE OUT ABOVE*@
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Addr2)"
+                                                                      Caption="Line 2:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="6"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="Line2Field">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Addr2" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Addr3)"
+                                                                      Caption="Line 3:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="6"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="Line3Field">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Addr3" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.City)"
+                                                                      Caption="City:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="6"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="CityField">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].City" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKstateID)"
+                                                                      Caption="State:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="6"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="StateField">
+                                                            <DxComboBox Data="@States.Model"
+                                                                        TextFieldName="@nameof(CO_StatesRO.Value)"
+                                                                        ValueFieldName="@nameof(CO_StatesRO.ID)"
+                                                                        @bind-Value="@vm.Model.AP_VendorsExtList[0].FKstateID"
+                                                                        DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                        CssClass="cmbStatus cmbStatusWidth">
+                                                                <DxListEditorColumn FieldName="Value" Caption="State" />
+                                                                <DxListEditorColumn FieldName="Description" Caption="Description" />
+                                                            </DxComboBox>
+                                                            @*<CslaValidationMessages For="@(() => vm.Model.Address)" />*@
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Zip)"
+                                                                      Caption="Zip Code:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="6"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="ZipField">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Zip" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKcountryID)"
+                                                                      Caption="Country:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="6"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="CountryField">
+                                                            <DxComboBox Data="@Countries.Model"
+                                                                        TextFieldName="@nameof(CO_CountriesRO.Value)"
+                                                                        ValueFieldName="@nameof(CO_CountriesRO.ID)"
+                                                                        @bind-Value="@vm.Model.AP_VendorsExtList[0].FKcountryID"
+                                                                        DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                        CssClass="cmbStatus cmbStatusWidth">
+                                                                <DxListEditorColumn FieldName="Value" Caption="Country" />
+                                                            </DxComboBox>
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    @*Work on this*@
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Zip)"
+                                                                      Caption="Website:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="12"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="WebsiteField">
+                                                            <DxTextBox @bind-Text="@vm.Model.Website" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Website)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                </DxFormLayoutGroup>
+                                                @*Contact Group*@
+                                                <DxFormLayoutGroup Caption="Contact"
+                                                                   ColSpanXs="12"
+                                                                   ColSpanMd="12"
+                                                                   ColSpanLg="12">
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Phone)"
+                                                                      Caption="Phone:"
+                                                                      ColSpanXs="6"
+                                                                      ColSpanMd="7"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="PhoneField">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Phone" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Fax)"
+                                                                      Caption="Fax:"
+                                                                      ColSpanXs="6"
+                                                                      ColSpanMd="5"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="FaxField">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Fax" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Fname)"
+                                                                      Caption="FNAME:"
+                                                                      ColSpanXs="8"
+                                                                      ColSpanMd="4"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="ContFnameField">
+                                                            <DxTextBox @bind-Text="@vm.Model.Fname" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Fname)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(vm.Model.MI)"
+                                                                      Caption="Middle:"
+                                                                      ColSpanXs="4"
+                                                                      ColSpanMd="3"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="MIField">
+                                                            <DxTextBox @bind-Text="@vm.Model.MI" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.MI)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(vm.Model.Lname)"
+                                                                      Caption="Lname:"
+                                                                      ColSpanXs="12"
+                                                                      ColSpanMd="5"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="LnameField">
+                                                            <DxTextBox @bind-Text="@vm.Model.Lname" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Lname)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(vm.Model.Prefix)"
+                                                                      Caption="Prefix:"
+                                                                      ColSpanXs="6"
+                                                                      ColSpanMd="7"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="PrefixField">
+                                                            <DxTextBox @bind-Text="@vm.Model.Prefix" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Prefix)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(vm.Model.Suffix)"
+                                                                      Caption="Suffix:"
+                                                                      ColSpanXs="6"
+                                                                      ColSpanMd="5"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="SuffixField">
+                                                            <DxTextBox @bind-Text="@vm.Model.Suffix" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Suffix)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.Email)"
+                                                                      Caption="Email:"
+                                                                      ColSpanXs="6"
+                                                                      ColSpanMd="7"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="EmailField">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].Email" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+                                                    <DxFormLayoutItem Field="@nameof(AP_VendorsExt.JobTitle)"
+                                                                      Caption="Job Title:"
+                                                                      ColSpanXs="6"
+                                                                      ColSpanMd="5"
+                                                                      CaptionCssClass="lgFormCaption"
+                                                                      CssClass="">
+                                                        <Template Context="JobTitleField">
+                                                            <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].JobTitle" CssClass="largeFormField" />
+                                                            <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                        </Template>
+                                                    </DxFormLayoutItem>
+
+                                                </DxFormLayoutGroup>
+
+                                                break;
+                                        }
+                                    </DxFormLayoutTabPage>
+
+                                    <DxFormLayoutTabPage Caption="Check" />
+                                    <DxFormLayoutTabPage Caption="PO" />
+                                    <DxFormLayoutTabPage Caption="Comments" />
+                                </DxFormLayoutTabPages>
+                            </div>
+                                <DxFormLayoutGroup Decoration="FormLayoutGroupDecoration.None"
+                                                   ColSpanXs="12"
+                                                   ColSpanMd="12"
+                                                   ColSpanLg="6">
+                                    @*<Items>*@
+                                    @*G/L Defaults*@
+                                    <div id="deleteCss">
+                                        <DxFormLayoutGroup Caption="G/L Defaults"
+                                                           ColSpanXs="12"
+                                                           ColSpanMd="12"
+                                                           ColSpanLg="12">
+                                            <DxFormLayoutItem ColSpanXs="2"
+                                                              ColSpanXl="2">
+                                                <Template Context="LastTran">
+                                                    <div class="lgFormCaption">
+                                                        @if (@vm.Model.AP_VendorsExtList[0].UseMostRecentTran)
+                                                        {
+                                                            <DxCheckBox @bind-Checked="doUseLastTran">
+                                                                <p>
+                                                                    Use Last Tran
+                                                                </p>
+                                                            </DxCheckBox>
+                                                        }
+                                                        else
+                                                        {
+                                                            <DxCheckBox @bind-Checked="doNotUseLastTran">
+                                                                <p>
+                                                                    Use Last Tran
+                                                                </p>
+                                                            </DxCheckBox>}
+                                                    </div>
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKDAheaderID)"
+                                                              Caption="Direct Allocation:"
+                                                              ColSpanXs="10"
+                                                              ColSpanXl="10"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="DAField">
+                                                    <DxComboBox Data="@DAs.Model"
+                                                                @bind-Value="@vm.Model.AP_VendorsExtList[0].FKDAheaderID"
+                                                                ValueFieldName="@nameof(DA_DAHeadersRO.ID)"
+                                                                TextFieldName="@nameof(DA_DAHeadersRO.Value)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        <DxListEditorColumn FieldName="Value"
+                                                                            Caption="Value" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem ColSpanXs="2"
+                                                              ColSpanXl="2">
+                                                <Template Context="UseBudgets">
+                                                    <div class="lgFormCaption">
+                                                        @if (vm.Model.AP_VendorsExtList[0].UseBudgets)
+                                                        {
+                                                            <DxCheckBox @bind-Checked="doUseBudgets">
+                                                                <p>
+                                                                    Use Budgets
+                                                                </p>
+                                                            </DxCheckBox>
+                                                        }
+                                                        else
+                                                        {
+                                                            <DxCheckBox @bind-Checked="doNotUseBudgets">
+                                                                <p>
+                                                                    Use Budgets
+                                                                </p>
+                                                            </DxCheckBox>
+                                                        }
+
+                                                    </div>
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            @*MB will show how to use SQL to order by Acct # (not ID) and needs to be filtered for RE&EX accts*@
+                                            <DxFormLayoutItem Field="@nameof(GL_Seg1RO.ID)"
+                                                              Caption="BUDGET ACCOUNT:*"
+                                                              ColSpanXs="5"
+                                                              ColSpanXl="5"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="PymtTermField">
+                                                    <DxComboBox Data="@Accts.Model"
+                                                                @bind-Value="@vm.Model.AP_VendorsExtList[0].UseBudgetsAcct"
+                                                                ValueFieldName="@nameof(GL_Seg1RO.ID)"
+                                                                TextFieldName="@nameof(GL_Seg1RO.Value)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        @*Bug Report T1022892 - Shaking combobox*@
+                                                        <DxListEditorColumn FieldName="Value" Caption="Value:" Width="65px" />
+                                                        <DxListEditorColumn FieldName="Description" Caption="Description:" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Caption="Override Yr. End:*"
+                                                              ColSpanXs="5"
+                                                              ColSpanXl="5"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="PymtTermField">
+                                                    <DxComboBox Data="@Months.YearEndMonths"
+                                                                @bind-Value="@vm.Model.AP_VendorsExtList[0].UseBudgetsMonthEnd"
+                                                                ValueFieldName="@nameof(Month.ID)"
+                                                                TextFieldName="@nameof(Month.MonthName)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        <DxListEditorColumn FieldName="MonthName" Caption="Period Ending:" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            <DxFormLayoutItem Field="@nameof(AP_VendorsExt.OverrideMemo)"
+                                                              Caption="Override Memo:"
+                                                              ColSpanXs="12"
+                                                              ColSpanXl="7"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="OverrideMemoField">
+                                                    <DxTextBox @bind-Text="@vm.Model.AP_VendorsExtList[0].OverrideMemo" CssClass="largeFormField" />
+                                                    <CslaValidationMessages For="@(() => vm.Model.Address)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                            @* @*MB will show how to use SQL to order by Acct # (not ID) and needs to be filtered for RE&EX accts, Override Acct needs to be ordered by acct number and not ID*@
+                                            <DxFormLayoutItem Field="@nameof(AP_VendorsExt.OverrideAcct)"
+                                                              Caption="OVERRIDE ACCOUNT:"
+                                                              ColSpanXs="12"
+                                                              ColSpanXl="5"
+                                                              CaptionCssClass="lgFormCaption"
+                                                              CssClass="">
+                                                <Template Context="OverrideAcctField">
+                                                    <DxComboBox Data="@Accts.Model"
+                                                                @bind-Value="@vm.Model.AP_VendorsExtList[0].OverrideAcct"
+                                                                ValueFieldName="@nameof(GL_Seg1RO.ID)"
+                                                                TextFieldName="@nameof(GL_Seg1RO.Value)"
+                                                                DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                                CssClass="cmbStatus cmbStatusWidth"
+                                                                Id="cmbSubType">
+                                                        <DxListEditorColumn FieldName="Value" Caption="Value" />
+                                                        <DxListEditorColumn FieldName="Description" Caption="Description" />
+                                                    </DxComboBox>
+                                                    <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                                </Template>
+                                            </DxFormLayoutItem>
+                                        </DxFormLayoutGroup>
+                                    </div>
+    @*Other Info*@
+                                    <DxFormLayoutGroup Caption="Other Info"
+                                                       ColSpanXs="12"
+                                                       ColSpanMd="12"
+                                                       ColSpanLg="12">
+                                        <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKAPtermID)"
+                                                          Caption="Shipping Method:"
+                                                          ColSpanXs="12"
+                                                          ColSpanMd="12"
+                                                          CaptionCssClass="lgFormCaption"
+                                                          CssClass="">
+                                            <Template Context="ShippingMethodField">
+                                                <DxComboBox Data="@Shipping.Model"
+                                                            @bind-Value="@vm.Model.AP_VendorsExtList[0].FKshippingMethodID"
+                                                            ValueFieldName="@nameof(CO_ShippingMethodsRO.ID)"
+                                                            TextFieldName="@nameof(CO_ShippingMethodsRO.Value)"
+                                                            DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                            CssClass="cmbStatus cmbStatusWidth"
+                                                            Id="cmbSubType">
+                                                    <DxListEditorColumn FieldName="Value" Caption="Shipping Method" />
+                                                </DxComboBox>
+                                                <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                            </Template>
+                                        </DxFormLayoutItem>
+                                        <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKsubID)"
+                                                          Caption="VENDOR ID:*"
+                                                          ColSpanXs="6"
+                                                          ColSpanMd="6"
+                                                          CaptionCssClass="lgFormCaption"
+                                                          CssClass="">
+                                            <Template Context="VendorIdField">
+                                                <DxTextBox @bind-Text=FkSubId CssClass="largeFormField" />
+                                                <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                            </Template>
+                                        </DxFormLayoutItem>
+                                        <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKsubID)"
+                                                          Caption="OTHER ID:"
+                                                          ColSpanXs="6"
+                                                          ColSpanMd="6"
+                                                          CaptionCssClass="lgFormCaption"
+                                                          CssClass="">
+                                            <Template Context="OtherIdField">
+                                                <DxTextBox @bind-Text="@vm.Model.Value" CssClass="largeFormField" />
+                                                <CslaValidationMessages For="@(() => vm.Model.TaxNo)" />
+                                            </Template>
+                                        </DxFormLayoutItem>
+                                        <DxFormLayoutItem Field="@nameof(AP_VendorsExt.FKAPtermID)"
+                                                          Caption="Vendor Since:"
+                                                          ColSpanXs="6"
+                                                          ColSpanMd="6"
+                                                          CaptionCssClass="lgFormCaption"
+                                                          CssClass="">
+                                            <Template Context="VendorsinceField">
+                                                <DxDateEdit @bind-Date="vm.Model.SubSince" />
+                                                <CslaValidationMessages For="@(() => vm.Model.SubSince)" />
+                                            </Template>
+                                        </DxFormLayoutItem>
+                                        <DxFormLayoutItem Caption="Status:*"
+                                                          ColSpanXs="6"
+                                                          ColSpanMd="6"
+                                                          CaptionCssClass="lgFormCaption"
+                                                          CssClass="">
+                                            <Template Context="FieldStatus">
+                                                <DxComboBox Data="@StatusTypes.Statuses"
+                                                            @bind-Value="@vm.Model.Status"
+                                                            ValueFieldName="@nameof(StatusField.StatusLetter)"
+                                                            TextFieldName="@nameof(StatusField.StatusName)"
+                                                            DropDownWidthMode="DropDownWidthMode.ContentWidth"
+                                                            CssClass="cmbStatus cmbStatusWidth"
+                                                            Id="cmbStatus">
+                                                    <DxListEditorColumn FieldName="StatusName" Caption="Status" />
+                                                </DxComboBox>
+                                                <CslaValidationMessages For="@(() => vm.Model.SubType)" />
+                                            </Template>
+                                        </DxFormLayoutItem>
+                                    </DxFormLayoutGroup>
+                                    @*</Items>*@
+                                </DxFormLayoutGroup>
+                            </DxFormLayout>
+                        </div>
+                    </EditForm>
+                    break;
+            }
+        </DxTabPage>
+        <DxTabPage Text="History" CssClass="editFormTabs" />
+        <DxTabPage Text="Audit" CssClass="editFormTabs" />
+        <DxTabPage Text="Interactions" CssClass="editFormTabs" />
+        <DxTabPage Text="Custom Fields" CssClass="editFormTabs" />
+        <DxTabPage Text="Attachments" CssClass="editFormTabs" />
+
+    </DxTabs>
+}
+@*</div>*@
+@*</div>*@
+@code {
+    int ActiveTabIndex0 { get; set; } = 0;
+    int ActiveTabIndex1 { get; set; } = 0;
+    bool isXSmallScreen;
+    public string FkSubId = "System.Convert.ToString(vm.Model.ID)";
+    bool is1099 = true;
+    bool isNot1099 = false;
+    bool doUseLastTran = true;
+    bool doNotUseLastTran = false;
+    bool doUseBudgets = true;
+    bool doNotUseBudgets = false;
+    bool isCCVendor = true;
+    bool isNotCCVendor = false;
+    bool isSeparateChecks = true;
+    bool isNotSeparateChecks = false;
+    bool doHoldPayment = true;
+    bool doNotHoldPayment = false;
+    //DateTime birthDate;
+    //DateTime BirthDate { get { return vm.Model.SubDOB; }
+    //    set { birthDate = value; }
+    //}
+    DateTime NullValue { get; set; } = new DateTime(1753, 01, 01);
+    //public string ORate = "0";
+    //public string ORate = System.Convert.ToString(VendorsExt.Model.SpecialRate);
+    //string OverRate = VendorsExt.Model.SpecialRate.ToString;
+    string TextValue = "UNBOUND";
+
+
+    [Parameter]
+    public string id { get; set; }
+    protected string ValueFieldFriendlyName;
+    Task OnInitNewRow(Dictionary<string, object> values)
+    {
+        //vm.Model.CO_DetailsList.AddNew();
+        //if   (values[ == nameof(vm.Model.BatchValue))
+        //    {
+        //    }
+        //vm.Model.CO_DetailsList[vm.Model.CO_DetailsList.Count].Memo = "test add";
+        return Task.CompletedTask;
+    }
+
+    public static void SetValue(object inputObject, string propertyName, object propertyVal)
+    {
+        //find out the type
+        Type type = inputObject.GetType();
+
+        //get the property information based on the type
+        System.Reflection.PropertyInfo propertyInfo = type.GetProperty(propertyName);
+
+        //find the property type
+        Type propertyType = propertyInfo.PropertyType;
+
+        //Returns an System.Object with the specified System.Type and whose value is
+        //equivalent to the specified object.
+        propertyVal = Convert.ChangeType(propertyVal, propertyType);
+
+        //Set the value of the property
+        propertyInfo.SetValue(inputObject, propertyVal, null);
+
+    }
+    //void OnRowRemoving(CO_Details dataItem)
+    //{
+    //    vm.Model.CO_DetailsList.Remove(dataItem);
+    //}
+    //void OnRowInserting(Dictionary<string, object> newValue)
+    //{
+    //    vm.Model.CO_DetailsList.AddNew();
+
+    //    foreach (KeyValuePair<String, Object> Item in newValue)
+    //    {
+    //        SetValue(vm.Model.CO_DetailsList[vm.Model.CO_DetailsList.Count - 1], Item.Key, Item.Value);
+    //    }
+    //}
+    void OnRowUpdating(CO_Details dataItem, Dictionary<string, object> newValue)
+    {
+
+    }
+
+
+    void OnItemUpdatingHdr(string fieldName, object newValue)
+    {
+        SetValue(vm.Model, fieldName, newValue);
+    }
+
+    void OnItemUpdatingDet(string fieldName, object newValue)
+    {
+        SetValue(vm.Model.AP_VendorsExtList[0], fieldName, newValue);
+    }
+
+    string IDTextValue = "";
+
+    //To sort accounts in comboboxes
+    //IQueryable<GL_Seg1RO> comboData { get; set; }
+    protected override void OnInitialized()
+    {
+        vm.Saved += () => NavigationManager.NavigateTo("Vendors");
+        vm.ModelPropertyChanged += async (s, e) => await InvokeAsync(() => StateHasChanged());
+
+
+        //if (ORate == "0")
+        //{
+
+
+        //}
+        //else
+        //{
+        //    ORate = "0";
+        //}
+
+        //To sort accounts in comboboxes
+        //comboData = GL_Seg1RO.GetData().OrderBy(a => a.A);
+    }
+    //@nameof(GL_Seg1RO.Value)
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            await vm.RefreshAsync(() => Csla.DataPortal.CreateAsync<FezWeb.BizObj.AP_Vendors>());
+            if (vm.Model.AP_VendorsExtList.Count == 0)
+            {
+                vm.Model.AP_VendorsExtList.AddNew();
+            }
+        }
+        else
+        {
+            //var mydate = new DateTime(2020, 11, 2);
+            await vm.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.AP_Vendors>(int.Parse(id)));
+        }
+        if (!(vm.Model == null))
+        {
+            if (vm.Model.ID < 0)
+            {
+                IDTextValue = "Add New Transaction";
+                //selectedSubType = "Individual";
+            }
+            else
+            {
+                IDTextValue = "Edit Existing Vendor - " + vm.Model.ID.ToString();
+                //selectedSubType = vm.Model.SubType;
+            }
+        }
+        await Terms.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.AP_APTermsCollection>());
+        //Checkbox (inject stmt at top?)
+        await Taxable.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CB_TaxesPA>());
+        await DefTaxes.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CB_TaxesCollection>());
+        //TextBox (inject stmt at top?)
+        //TextBox (inject stmt at top?)
+        await OverRdRt.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.vspCO_SubOverridesCollection>());
+        await Discounts.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CB_DiscountsCollection>());
+        await States.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CO_StatesCollection>());
+        await Countries.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CO_CountriesCollection>());
+        await Sources.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CB_CBSourcesCollection>());
+        await Classifications.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CB_ClassificationsCollection>());
+        await Shipping.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CO_ShippingMethodsCollection>());
+        await Contacts.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.CO_ContactsCollection>());
+        await DAs.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.DA_DAHeadersCollection>());
+        await Accts.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.GL_Seg1Collection>());
+        await VendorTaxId.RefreshAsync(() => Csla.DataPortal.FetchAsync<FezWeb.BizObj.AP_VendorsCollection>());
+
+
+
+    }
+
+    private async void SaveVendors()
+    {
+        await vm.SaveAsync();
+    }
+
+    //Create Statuses
+    public class StatusField
+    {
+        public string StatusName { get; set; }
+        public string StatusLetter { get; set; }
+    }
+
+    public static class StatusTypes
+    {
+        private static readonly Lazy<List<StatusField>> statuses = new Lazy<List<StatusField>>(() =>
+        {
+            return new List<StatusField>()
+                        {
+                    new StatusField() {StatusName = "Active", StatusLetter = "A"},
+                    new StatusField() {StatusName = "Inactive", StatusLetter = "I"},
+                    new StatusField() {StatusName = "Discontinued", StatusLetter = "D"},
+                                                                                        };
+        });
+        public static List<StatusField> Statuses { get { return statuses.Value; } }
+    }
+
+    string selectedStatus = "A";
+
+    //Create SubTypes
+    public class SubTypeField
+    {
+        public string SubTypeName { get; set; }
+        public string SubTypeLetter { get; set; }
+    }
+
+    public static class SubTypes
+    {
+        private static readonly Lazy<List<SubTypeField>> subTypes = new Lazy<List<SubTypeField>>(() =>
+        {
+            return new List<SubTypeField>()
+                {
+                    new SubTypeField() {SubTypeName = null, SubTypeLetter = null},
+                    new SubTypeField() {SubTypeName = "Individual", SubTypeLetter = "I"},
+                    new SubTypeField() {SubTypeName = "Organization", SubTypeLetter = "O"}
+                                                                                            };
+        });
+        public static List<SubTypeField> VendorSubTypes { get { return subTypes.Value; } }
+    }
+
+    string selectedSubType = "VendorSubTypes";
+
+
+
+    //Set up months for Override Year End
+    public class Month
+    {
+        public int ID { get; set; }
+        public string MonthName { get; set; }
+    }
+
+    public static class Months
+    {
+        private static readonly Lazy<List<Month>> months = new Lazy<List<Month>>(() =>
+        {
+            return new List<Month>()
+            {
+            new Month() {ID = 0, MonthName = ""},
+            new Month() {ID = 1, MonthName = "January"},
+            new Month() {ID = 2, MonthName = "February"},
+            new Month() {ID = 3, MonthName = "March"},
+            new Month() {ID = 4, MonthName = "April"},
+            new Month() {ID = 5, MonthName = "May"},
+            new Month() {ID = 6, MonthName = "June"},
+            new Month() {ID = 7, MonthName = "July"},
+            new Month() {ID = 8, MonthName = "August"},
+            new Month() {ID = 9, MonthName = "September"},
+            new Month() {ID = 10, MonthName = "October"},
+            new Month() {ID = 11, MonthName = "November"},
+            new Month() {ID = 12, MonthName = "December"}
+                        };
+        });
+        public static List<Month> YearEndMonths { get { return months.Value; } }
+    }
+
+    //To sort accounts in comboboxes
+    //IQueryable<DataObject> comboData { get; set; }
+    //protected override void OnInitialized()
+    //{
+    //    comboData = DataObject.GetData().OrderBy(a => a.A);
+    //}
+
+}
+
